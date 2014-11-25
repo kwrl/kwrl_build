@@ -1,4 +1,5 @@
 from io_utils import *
+from print_utils import print_debug, print_error, print_info
 from styles import *
 from languages import Language
 from themes import Theme
@@ -19,7 +20,7 @@ import string
 try:
     import yaml
 except ImportError:
-    print ("You need to install pyyaml using pip or easy_install, sorry")
+    print_error("You need to install pyyaml using pip or easy_install, sorry")
     sys.exit(-10)
 
 # todo : real classes
@@ -46,10 +47,10 @@ def sort_files(files):
 
 #Find manifests and add all build languages 
 def get_termlangs(repositories, all_languages):
-    print ("Searching for manifests ..")
+    print_info("Searching for manifests ..")
     termlangs = {}
     for m in find_files(repositories, ".manifest"):
-        print ("Found Manifest:" +str(m))
+        print_info("Found Manifest:" +str(m))
         try:
             term = parse_manifest(m)
             if term.language not in termlangs:
@@ -58,14 +59,14 @@ def get_termlangs(repositories, all_languages):
         except Exception as e:
             import traceback
             traceback.print_exc()
-            print ("Failed", e)
+            print_error("Failed" + e)
     return termlangs
 
 # The all singing all dancing build function of doing everything.
 def build(repositories, theme, all_languages, output_dir):
     termlangs = get_termlangs(repositories, all_languages)
     
-    print ("Copying assets")
+    print_info("Copying assets")
     copydir(html_assets, output_dir)
     css_dir = os.path.join(output_dir, "css")
     makedirs(css_dir)
@@ -83,7 +84,7 @@ def build(repositories, theme, all_languages, output_dir):
                 translations = {}
             )
         language = all_languages[language_code]
-        print ("Language "+language.name)
+        print_info("Language "+language.name)
         out_terms = []
         count = 0;
         lang_dir = os.path.join(output_dir, language.code)
@@ -91,11 +92,11 @@ def build(repositories, theme, all_languages, output_dir):
         for term in terms:
             term_dir = os.path.join(lang_dir, "%s.%d"%(term.id, term.number))
             makedirs(term_dir)
-            print ("Building Term:" + str(term.title))
+            print_info("Building Term:" + str(term.title))
             projects = []
             for p in term.projects:
                 try: 
-                    print("Building project:\t" + str(p.filename))
+                    print_info("Building project:\t" + str(p.filename))
                 except:
                     continue
                 count+=1
@@ -105,10 +106,10 @@ def build(repositories, theme, all_languages, output_dir):
                 try:
                     built_project = Project.build_project(term, project, language, theme, project_dir)
                 except:
-                    print("Failed project: " + str(p.filename))
+                    print_error("Failed project: " + str(p.filename))
                     continue
                 projects.append(built_project)
-                print("Project done:\t\t" + str(p.filename))
+                print_info("Project done:\t\t" + str(p.filename))
 
             extras = []
             for r in term.extras:
@@ -125,21 +126,21 @@ def build(repositories, theme, all_languages, output_dir):
 
             out_terms.append(make_term_index(term, language, theme, term_dir))
 
-            print ("Term built!")
+            print_info("Term built!")
 
-        print ("Building " + language.name +" index")
+        print_info("Building " + language.name +" index")
 
         languages[language_code]=make_lang_index(language, out_terms, theme, lang_dir)
         project_count[language_code]=count
 
-    print ("Building " + theme.name + " index: " + output_dir)
+    print_info("Building " + theme.name + " index: " + output_dir)
 
     sorted_languages =  []
     for lang in sorted(project_count.keys(), key=lambda x:project_count[x], reverse=True):
         sorted_languages.append((all_languages[lang], languages[lang]))
 
     make_index(sorted_languages,all_languages[theme.language], theme, output_dir)
-    print ("Complete")
+    print_info("Complete")
 
 def parse_manifest(filename):
     fh = codecs.open(filename,"r","utf-8").read()
@@ -147,7 +148,6 @@ def parse_manifest(filename):
     base_dir = os.path.join(os.path.dirname(filename))
     projects = []
     for p in json_manifest['projects']:
-        print (p['filename'])
         filename = expand_glob(base_dir, p['filename'], one_file=True)
         materials = expand_glob(base_dir, p.get('materials',[]))
         embeds = expand_glob(base_dir, p.get('embeds',[]))
@@ -277,7 +277,7 @@ LANGUAGES   = Language.load_languages(language_base)
 if __name__ == '__main__':
     args = sys.argv[1::]
     if len(args) < 3:
-        print ("usage: %s <region> <input repository directories> <output directory>")
+        print_error("usage: %s <region> <input repository directories> <output directory>")
         sys.exit(-1)
     theme = THEMES[args[0]]
     languages = LANGUAGES
