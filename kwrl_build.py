@@ -95,7 +95,7 @@ def build(repositories, theme, all_languages, output_dir):
             projects = []
             for p in term.projects:
                 try: 
-                    print("Building project: " + str(p.title))
+                    print("Building project:\t" + str(p.filename))
                 except:
                     continue
                 count+=1
@@ -105,10 +105,10 @@ def build(repositories, theme, all_languages, output_dir):
                 try:
                     built_project = Project.build_project(term, project, language, theme, project_dir)
                 except:
-                    print(str(p.title)+ " failed!")
+                    print("Failed project: " + str(p.filename))
                     continue
                 projects.append(built_project)
-                print("Project done: " + str(p.title))
+                print("Project done:\t\t" + str(p.filename))
 
             extras = []
             for r in term.extras:
